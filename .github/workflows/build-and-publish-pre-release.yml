@@ -1,0 +1,84 @@
+name: .NET Core [Pre-Release]
+
+on:
+  push:
+    paths:
+      - 'src/**/*'
+      - '.github/workflows/build*.yml'
+    branches-ignore:
+     - 'release/*'
+     - 'hotfix/*'
+    pull_request:
+     - opened
+     - edited
+     - synchronize
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2.4.0
+      with:
+        fetch-depth: 0
+    - name: Fetch tags and master
+      run: |
+        git fetch --tags
+        echo REF: $GITHUB_REF
+        echo SHA: $GITHUB_SHA
+        echo GIT_BRANCH=$GITHUB_REF >> $GITHUB_ENV
+        git branch --remote
+    - name: Check file existence
+      id: check_files
+      working-directory: ./src
+      run: if [[ -f global.json && $(compgen -G "*.sln") && $(compgen -G "**/*.csproj") ]]; then echo '::set-output name=files_exist::true'; else echo '::set-output name=files_exist::false'; fi
+    - if: steps.check_files.outputs.files_exists == 'true'
+      name: Determine .net core version
+      uses: credfeto/action-dotnet-version-detect@v1.2.0
+    - if: steps.check_files.outputs.files_exists == 'true'
+      name: Setup .NET Core
+      uses: actions/setup-dotnet@v1.9.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    - if: steps.check_files.outputs.files_exists == 'true'
+      name: Enable dotnet tools
+      run: dotnet new tool-manifest
+    - if: steps.check_files.outputs.files_exists == 'true'
+      name: Install Build Version Tool
+      run: dotnet tool install --local FunFair.BuildVersion
+    - if: steps.check_files.outputs.files_exists == 'true'
+      name: Install Multi-Push Tool
+      run: dotnet tool install --local Credfeto.Package.Push
+    - if: steps.check_files.outputs.files_exists == 'true'
+      name: Set Define Build Version
+      run: dotnet buildversion --BuildNumber $GITHUB_RUN_NUMBER
+    - if: steps.check_files.outputs.files_exists == 'true'
+      name: Install Changelog Tool
+      run: dotnet tool install --local Credfeto.Changelog.Cmd
+    - if: steps.check_files.outputs.files_exists == 'true'
+      name: Create Release Notes
+      run: dotnet changelog --changelog CHANGELOG.md --extract RELEASE_NOTES.md --version ${{ env.BUILD_VERSION }}
+    - if: steps.check_files.outputs.files_exists == 'true'
+      id: release-notes
+      uses: juliangruber/read-file-action@v1
+      with:
+        path: RELEASE_NOTES.md
+    - if: steps.check_files.outputs.files_exists == 'true'
+      name: Build with dotnet
+      working-directory: ./src
+      run: dotnet build --configuration Release /p:Version=${{ env.BUILD_VERSION }}
+    - if: steps.check_files.outputs.files_exists == 'true'
+      name: Pack tool
+      working-directory: ./src
+      run: dotnet pack --configuration Release /p:Version=${{ env.BUILD_VERSION }} --no-restore --output ../dist
+      env:
+        ReleaseNotes: ${{ steps.release-notes.outputs.content }}
+    - if: ${{ steps.check_files.outputs.files_exists == 'true' && github.actor != 'dependabot[bot]' }}
+      name: Update Release Notes
+      run: dotnet changelog --changelog CHANGELOG.md --extract RELEASE_NOTES.md --version ${{ env.BUILD_VERSION }}
+    - if: ${{ steps.check_files.outputs.files_exists == 'true' && github.actor != 'dependabot[bot]' }}
+      name: Publish
+      run: dotnet pushpackages -folder dist --api-key ${{ secrets.NUGET_API_KEY }} --source ${{ secrets.NUGET_FEED }}
