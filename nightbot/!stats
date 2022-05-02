@@ -1,0 +1,1 @@
+Channel stats: $(twitch $(channel) "{{viewers}} viewers, {{views}} views, {{followers}} followers")
