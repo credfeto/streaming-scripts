@@ -1,0 +1,1 @@
+$(urlfetch https://decapi.me/twitch/followcount/$(channel))
