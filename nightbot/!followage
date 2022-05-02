@@ -1,0 +1,1 @@
+$(urlfetch https://2g.be/twitch/following.php?user=$(touser)&channel=$(channel)&format=mwdhms)
