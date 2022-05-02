@@ -1,2 +1,3 @@
-# cs-template
-C# Template
+# streaming-scripts
+
+Scripts for use with streaming
