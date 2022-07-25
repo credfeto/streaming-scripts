@@ -1,4 +1,4 @@
-#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
+NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 ; #Warn  ; Enable warnings to assist with detecting common errors.
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
@@ -8,27 +8,37 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 ; **********************************************************************************************************************
 
 ; Where is the folder that contain the files for now playing and played (Accessing ObsDirectoryStudio on the OBS Machine)
-ObsDirectory := "O:"
+; if the same machine they should be 
+ObsDirectory := "C:\Currently Playing"
 
-; Where is the folder that contains files for now playing and played on the studio machine
+; Where is the folder that contains files for now playing and played on the studio machine (or video laptop)
 ObsDirectoryStudio := "C:\Currently Playing"
 
 ; Where the videos file exists under BOTH ObsDirectory and ObsDirectoryStudio
+e.g. if ObsDirectory is C:\Playing and ObsDirectoryStudio is N:\Playing the Videos folder should be pointing to the
+;    same folder C:\Playing\Videos and N:\Playing\Videos
+; This folder should contain a m3u file for any track that has video 
+; e.g. "Comfortably Numb.ahk" should have "Comfortably Numb.m3u" in the folder
 VideosDirectoryName := "Videos"
 
-; Where is the VLC instance:
-VlcHostAndPort := "127.0.0.1:8080"
-VlcUsername := ""
-VlcPassword := "vlcremote"
+; VLC Setup
+; Open Preferences: Tools -> Preferences
+; Switch Show settings at bottom left to "All"
+; Find "Main Interfaces" in tree,  Select "Web" and "Remote Control Interface"
+; Under "Main Interfaces" in tree go to "Lua" and set the 'Lua HTTP' Password.
 
-;For testing on studio pc uncomment this line
-;ObsDirectory := "C:\Currently Playing"
-;ObsDirectoryStudio := ObsDirectory
-;VlcHostAndPort := "127.0.0.1:8080"
+; Where is the VLC instance located on the network:
+; if to the same machine use localhost to different machine, use name or (for speed IP Address):
+VlcHostAndPort := "localhost:8080"
+
+; VLC Username: Normally blank
+VlcUsername := ""
+; VLC Password - should be the same as what is set in 'Lua HTTP' Password
+VlcPassword := "vlcremote"
 
 
 ; **********************************************************************************************************************
-; * FUNCTIONS
+; * SCRIPTNAME TO SONGNAME FUNCTIONS
 ; **********************************************************************************************************************
 
 GetSongName() {
@@ -40,6 +50,32 @@ GetSongName() {
     return SongName
 }
 
+; **********************************************************************************************************************
+; * SONG LIST UPDATE FUNCTIONS
+; **********************************************************************************************************************
+IsSameAsLastSong(LastSong, NewSong) {
+    lastSongsList := StrSplit(LastSong, "`n")
+
+    if(lastSongsList.MaxIndex == 0) {
+        ; no songs
+        return false
+    }
+
+    Match := false
+    For index, entry in lastSongsList {
+        SongName := Trim(entry, "`r")
+        if(StrLen(SongName) != 0) {
+            if (SongName == NewSong) {
+                Match := true
+	    }
+
+	    break
+        }
+    }
+
+    return %Match%
+}
+
 UpdateNowPlaying(SongTrackingDirectory, SongName) {
     NowPlaying := SongTrackingDirectory . "\NowPlaying.txt"
     Played := SongTrackingDirectory . "\Played.txt"
@@ -48,10 +84,13 @@ UpdateNowPlaying(SongTrackingDirectory, SongName) {
     if FileExist(Played)
     {
         FileRead, LastPlayedSongs, %Played%
+	
+	if !IsSameAsLastSong(LastPlayedSongs, SongName) {
 
-        FileDelete, %Played%
-        FileAppend, %SongName%`n, %Played%
-        FileAppend, %LastPlayedSongs%, %Played%
+            FileDelete, %Played%
+            FileAppend, %SongName%`n, %Played%
+            FileAppend, %LastPlayedSongs%, %Played%
+	}	
     }
     else
     {
@@ -65,6 +104,10 @@ UpdateNowPlaying(SongTrackingDirectory, SongName) {
 
     return
 }
+
+; **********************************************************************************************************************
+; * VLC FUNCTIONS BEGIN
+; **********************************************************************************************************************
 
 b64Encode(string) {
     ; BASIC Authentication requires BASE 64 encoding
@@ -83,25 +126,6 @@ LC_UriEncode(Uri, RE="[0-9A-Za-z]") {
 	While Code := NumGet(Var, A_Index - 1, "UChar")
 		Res .= (Chr:=Chr(Code)) ~= RE ? Chr : Format("%{:02X}", Code)
 	Return, Res
-}
-
-SendBasicAuthGetCommand(Command, Auth) {
-
-    ; Send the request to VLC's web server
-    try
-    {
-        oWhr := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-        oWhr.SetTimeouts("1000", "1000", "2500", "5000")
-        oWhr.Open("GET", command, false)
-        oWhr.SetRequestHeader("Content-Type", "application/json")
-        oWhr.SetRequestHeader("Authorization", "Basic " . Auth)
-        oWhr.Send()
-    }
-    catch e {
-        ; don't care
-        ; MsgBox e.Message
-    }
-
 }
 
 StartVideoInVlc(HostAndPort, UserName, Password, RemoteDirectory, LocalDirectory, CommonVideosDirectory, SongName) {
@@ -126,7 +150,11 @@ StartVideoInVlc(HostAndPort, UserName, Password, RemoteDirectory, LocalDirectory
     command := "http://" . HostAndPort . "/requests/status.xml?command=in_play&input=" . FileToPlay
 
     ; Send the request to VLC's web server
-    SendBasicAuthGetCommand(command, auth)
+    oWhr := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+    oWhr.Open("GET", command, false)
+    oWhr.SetRequestHeader("Content-Type", "application/json")
+    oWhr.SetRequestHeader("Authorization", "Basic " . auth)
+    oWhr.Send()
 }
 
 StopVideoInVlc(HostAndPort, UserName, Password) {
@@ -139,7 +167,11 @@ StopVideoInVlc(HostAndPort, UserName, Password) {
     command := "http://" . HostAndPort . "/requests/status.xml?command=pl_stop"
 
     ; Send the request to VLC's web server
-    SendBasicAuthGetCommand(command, auth)
+    oWhr := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+    oWhr.Open("GET", command, false)
+    oWhr.SetRequestHeader("Content-Type", "application/json")
+    oWhr.SetRequestHeader("Authorization", "Basic " . auth)
+    oWhr.Send()
 }
 
 ClearPlaylistInVlc(HostAndPort, UserName, Password) {
@@ -149,29 +181,65 @@ ClearPlaylistInVlc(HostAndPort, UserName, Password) {
     auth := b64Encode(UserName . ":" . Password)
 
     ; Build the clear playlist command
-    command := "http://" . HostAndPort . "/requests/status.xml?command=pl_empty"
+    playPLaylistCommand := "http://" . HostAndPort . "/requests/status.xml?command=pl_empty"
 
     ; Send the request to VLC's web server
-    SendBasicAuthGetCommand(command, auth)
+    oWhr := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+    oWhr.Open("GET", playPLaylistCommand, false)
+    oWhr.SetRequestHeader("Content-Type", "application/json")
+    oWhr.SetRequestHeader("Authorization", "Basic " . auth)
+    oWhr.Send()
 }
 
+; **********************************************************************************************************************
+; * VLC FUNCTIONS END
+; **********************************************************************************************************************
+
+
+; **********************************************************************************************************************
+; * ShowBuddy FUNCTIONS
+; **********************************************************************************************************************
+
 StartTrackInShowBuddy() {
-    ; Activate Show Buddy, hit space to start playing
 	WinActivate, Show Buddy
+	Send  {Space}
+	return
+}
+
+; **********************************************************************************************************************
+; * Cubase FUNCTIONS
+; **********************************************************************************************************************
+
+StartTrackInCubase() {
+    ; Activate Cubase, hit space to start playing
+	Sleep 140
+	WinActivate, Cubase
 	Send  {Space}
 	return
 }
 
 
 ; **********************************************************************************************************************
-; * SEQUENCE OF ACTIONS
+; **********************************************************************************************************************
+; **********************************************************************************************************************
+; *                                                       END OF FUNCTIONS                                             *
+; **********************************************************************************************************************
+; **********************************************************************************************************************
 ; **********************************************************************************************************************
 
-ClearPlaylistInVlc(VlcHostAndPort, VlcUsername, VlcPassword)
+
+; **********************************************************************************************************************
+; * SEQUENCE OF ACTIONS TO RUN
+; **********************************************************************************************************************
+
 StopVideoInVlc(VlcHostAndPort, VlcUsername, VlcPassword)
+ClearPlaylistInVlc(VlcHostAndPort, VlcUsername, VlcPassword)
 SongName := GetSongName()
 UpdateNowPlaying(ObsDirectory, SongName)
 StartVideoInVlc(VlcHostAndPort, VlcUsername, VlcPassword, ObsDirectory, ObsDirectoryStudio, VideosDirectoryName, SongName)
-StartTrackInShowBuddy()
+
+; StartTrackInCubase()
+; StartTrackInShowBuddy()
+
 
 return
