@@ -54,22 +54,20 @@ GetSongName() {
 ; * SONG LIST UPDATE FUNCTIONS
 ; **********************************************************************************************************************
 IsSameAsLastSong(LastSong, NewSong) {
+    ; Split the file into an array of lines we go through
     lastSongsList := StrSplit(LastSong, "`n")
 
-    if(lastSongsList.MaxIndex == 0) {
-        ; no songs
-        return false
-    }
-
+    ; Find the first non-blank entry in the list and check its name against the new song name
     Match := false
     For index, entry in lastSongsList {
         SongName := Trim(entry, "`r")
         if(StrLen(SongName) != 0) {
             if (SongName == NewSong) {
+                ; Last song was the same as the new song - don't do any more
                 Match := true
-	    }
+	        }
 
-	    break
+	        break
         }
     }
 
@@ -85,15 +83,17 @@ UpdateNowPlaying(SongTrackingDirectory, SongName) {
     {
         FileRead, LastPlayedSongs, %Played%
 	
-	if !IsSameAsLastSong(LastPlayedSongs, SongName) {
+        if !IsSameAsLastSong(LastPlayedSongs, SongName) {
 
+            ; Append the song to the top of the file (delete the file, write the new song followed by the old one)
             FileDelete, %Played%
             FileAppend, %SongName%`n, %Played%
             FileAppend, %LastPlayedSongs%, %Played%
-	}	
+	    }	
     }
     else
     {
+        ; No song list, create a file with the song name in it.
         FileDelete, %Played%
         FileAppend, %SongName%, %Played%
     }
@@ -201,7 +201,8 @@ ClearPlaylistInVlc(HostAndPort, UserName, Password) {
 ; **********************************************************************************************************************
 
 StartTrackInShowBuddy() {
-	WinActivate, Show Buddy
+	; Activate ShowBuddy, hit space to start playing
+    WinActivate, Show Buddy
 	Send  {Space}
 	return
 }
