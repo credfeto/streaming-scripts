@@ -256,6 +256,7 @@ ClearPlaylistInVlc(HostAndPort, UserName, Password) {
 ; * ShowBuddy FUNCTIONS
 ; **********************************************************************************************************************
 
+; note this won't do anything unless it is explicitly called in the 'SEQUENCE OF ACTIONS TO RUN' section below
 StartTrackInShowBuddy() {
 	; Activate ShowBuddy, hit space to start playing
     WinActivate, Show Buddy
@@ -267,6 +268,7 @@ StartTrackInShowBuddy() {
 ; * Cubase FUNCTIONS
 ; **********************************************************************************************************************
 
+; note this won't do anything unless it is explicitly called in the 'SEQUENCE OF ACTIONS TO RUN' section below
 StartTrackInCubase() {
     ; Activate Cubase, hit space to start playing
 	Sleep 140
@@ -279,7 +281,8 @@ StartTrackInCubase() {
 ; * Reaper FUNCTIONS
 ; **********************************************************************************************************************
 
-StartTrackInCubase() {
+; note this won't do anything unless it is explicitly called in the 'SEQUENCE OF ACTIONS TO RUN' section below
+StartTrackInReaper() {
     ; Activate Reaper, hit space to start playing
 	Sleep 140
 	WinActivate, Reaper
