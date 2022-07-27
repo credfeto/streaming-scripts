@@ -180,7 +180,7 @@ StartVideoInVlcRemote(HostAndPort, UserName, Password, RemoteDirectory, LocalDir
 }
 
 StartVideoInVlc(HostAndPort, UserName, Password, RemoteDirectory, LocalDirectory, CommonVideosDirectory, SongName) {
-    If VlcLocal {
+    if VlcLocal {
     	StartVideoInVlcLocal(LocalDirectory, CommonVideosDirectory, SongName)
     } else {
         StartVideoInVlcRemote(HostAndPort, UserName, Password, RemoteDirectory, LocalDirectory, CommonVideosDirectory, SongName) 
@@ -188,7 +188,7 @@ StartVideoInVlc(HostAndPort, UserName, Password, RemoteDirectory, LocalDirectory
 }
 
 StopVideoInVlc(HostAndPort, UserName, Password) {
-    If VlcLocal {
+    if VlcLocal {
     	return
     }
     
@@ -209,7 +209,7 @@ StopVideoInVlc(HostAndPort, UserName, Password) {
 }
 
 ClearPlaylistInVlc(HostAndPort, UserName, Password) {
-    If VlcLocal {
+    if VlcLocal {
     	return
     }
     
