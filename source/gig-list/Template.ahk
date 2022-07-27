@@ -1,4 +1,4 @@
-NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
+#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 ; #Warn  ; Enable warnings to assist with detecting common errors.
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
@@ -8,10 +8,11 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 ; **********************************************************************************************************************
 
 ; Where is the folder that contain the files for now playing and played (Accessing ObsDirectoryStudio on the OBS Machine)
-; if the same machine they should be 
+; if the same machine they should be the same
 ObsDirectory := "C:\Currently Playing"
 
 ; Where is the folder that contains files for now playing and played on the studio machine (or video laptop)
+; if remote should use the drive letter mapping e.g. O:\Currently Playing OR a network path to the share \\STUDIO-PC\C\Currently Playing
 ObsDirectoryStudio := "C:\Currently Playing"
 
 ; Where the videos file exists under BOTH ObsDirectory and ObsDirectoryStudio
@@ -35,6 +36,9 @@ VlcHostAndPort := "localhost:8080"
 VlcUsername := ""
 ; VLC Password - should be the same as what is set in 'Lua HTTP' Password
 VlcPassword := "vlcremote"
+
+; Whether to start playlist using local exe
+VlcLocal := false
 
 
 ; **********************************************************************************************************************
@@ -128,14 +132,32 @@ LC_UriEncode(Uri, RE="[0-9A-Za-z]") {
 	Return, Res
 }
 
-StartVideoInVlc(HostAndPort, UserName, Password, RemoteDirectory, LocalDirectory, CommonVideosDirectory, SongName) {
+StartVideoInVlcLocal(LocalDirectory, CommonVideosDirectory, SongName) {
+   LocalFileName := LocalDirectory . "\" . CommonVideosDirectory . "\" . SongName . ".m3u"
 
+    ; Check to see if there is a playlist called <SongName>.m3u in the LocalDirectory
+    if Not FileExist(LocalFileName) {
+        ; File doesn't exist
+        return
+    }
+
+    Run, "C:\Program Files\VideoLAN\VLC\vlc.exe", LocalFileName
+}
+   
+StartVideoInVlcRemote(HostAndPort, UserName, Password, RemoteDirectory, LocalDirectory, CommonVideosDirectory, SongName) {
+    
     ; Define local and remote filenames - they should both resolve to the same file
     RemoteFileName := RemoteDirectory . "\" . CommonVideosDirectory . "\" . SongName . ".m3u"
     LocalFileName := LocalDirectory . "\" . CommonVideosDirectory . "\" . SongName . ".m3u"
 
     ; Check to see if there is a playlist called <SongName>.m3u in the RemoteDirectory
     if Not FileExist(RemoteFileName) {
+        ; File doesn't exist
+        return
+    }
+
+    ; Check to see if there is a playlist called <SongName>.m3u in the LocalDirectory
+    if Not FileExist(LocalFileName) {
         ; File doesn't exist
         return
     }
@@ -157,7 +179,21 @@ StartVideoInVlc(HostAndPort, UserName, Password, RemoteDirectory, LocalDirectory
     oWhr.Send()
 }
 
+StartVideoInVlc(HostAndPort, UserName, Password, RemoteDirectory, LocalDirectory, CommonVideosDirectory, SongName) {
+    If VlcLocal = true {
+    	StartVideoInVlcLocal(LocalDirectory, CommonVideosDirectory, SongName) {
+    }
+    else
+    {
+    	StartVideoInVlcRemote(HostAndPort, UserName, Password, RemoteDirectory, LocalDirectory, CommonVideosDirectory, SongName) {
+    }
+}
+
 StopVideoInVlc(HostAndPort, UserName, Password) {
+    If VlcLocal = true {
+    	return
+    }
+    
     ; Stop playing whatever may be playing
 
    ; Generate BASIC AUth token
@@ -175,6 +211,10 @@ StopVideoInVlc(HostAndPort, UserName, Password) {
 }
 
 ClearPlaylistInVlc(HostAndPort, UserName, Password) {
+    If VlcLocal = true {
+    	return
+    }
+    
     ; Clear the playlist
 
    ; Generate BASIC AUth token
