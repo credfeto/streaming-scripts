@@ -153,7 +153,7 @@ StartVideoInVlcLocal(LocalDirectory, CommonVideosDirectory, SongName) {
         return
     }
 
-    Run, VlcLocalExe, LocalFileName
+    Run, %VlcLocalExe%, LocalFileName
 }
    
 StartVideoInVlcRemote(HostAndPort, UserName, Password, RemoteDirectory, LocalDirectory, CommonVideosDirectory, SongName) {
