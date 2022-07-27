@@ -44,14 +44,17 @@ VlcUsername := ""
 
 VlcPassword := "vlcremote"
 
-; Whether to start playlist using local exe - this disables stopping VLC and clearing any existing playlist when set to true
+; Local Videos - Whether to start playlist using local exe - this disables stopping playing in VLC and clearing any existing playlist when set to true
 
 VlcLocal := false
-
+ 
 ; VLC Executable to run when VlcLocal is set to true
 
 VlcLocalExe := "C:\Program Files\VideoLAN\VLC\vlc.exe"
 
+; note when running VLC locally and not using networking, VLC needs to be in single instance mode
+; In Preferences Tick: 
+;   "Allow Only one instance"
 
 ; **********************************************************************************************************************
 ; * SCRIPTNAME TO SONGNAME FUNCTIONS
