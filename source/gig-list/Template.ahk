@@ -16,7 +16,7 @@ ObsDirectory := "C:\Currently Playing"
 ObsDirectoryStudio := "C:\Currently Playing"
 
 ; Where the videos file exists under BOTH ObsDirectory and ObsDirectoryStudio
-e.g. if ObsDirectory is C:\Playing and ObsDirectoryStudio is N:\Playing the Videos folder should be pointing to the
+; e.g. if ObsDirectory is C:\Playing and ObsDirectoryStudio is N:\Playing the Videos folder should be pointing to the
 ;    same folder C:\Playing\Videos and N:\Playing\Videos
 ; This folder should contain a m3u file for any track that has video 
 ; e.g. "Comfortably Numb.ahk" should have "Comfortably Numb.m3u" in the folder
