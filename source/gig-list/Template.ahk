@@ -24,7 +24,7 @@ VideosDirectoryName := "Videos"
 ; VLC Setup
 ; Open Preferences: Tools -> Preferences
 ; Switch Show settings at bottom left to "All"
-; Find "Main Interfaces" in tree,  Select "Web" and "Remote Control Interface"
+; Find "Main Interfaces" in tree,  Select "Web"
 ; Under "Main Interfaces" in tree go to "Lua" and set the 'Lua HTTP' Password.
 
 ; Where is the VLC instance located on the network:
