@@ -61,9 +61,9 @@ GetSongName() {
     ; Work out what is being played from the filename of the script
     ; e.g. Comfortably Numb.Ahk
     SongNameLength := StrLen(A_ScriptName) - 4
-    SongName := SubStr(A_ScriptName, 1, SongNameLength)
+    NewSongName := SubStr(A_ScriptName, 1, SongNameLength)
 
-    return SongName
+    return NewSongName
 }
 
 ; **********************************************************************************************************************
@@ -76,9 +76,9 @@ IsSameAsLastSong(LastSong, NewSong) {
     ; Find the first non-blank entry in the list and check its name against the new song name
     Match := false
     For index, entry in lastSongsList {
-        SongName := Trim(entry, "`r")
-        if(StrLen(SongName) != 0) {
-            if (SongName == NewSong) {
+        EntrySongName := Trim(entry, "`r")
+        if(StrLen(EntrySongName) != 0) {
+            if (EntrySongName == NewSong) {
                 ; Last song was the same as the new song - don't do any more
                 Match := true
 	        }
@@ -90,7 +90,7 @@ IsSameAsLastSong(LastSong, NewSong) {
     return %Match%
 }
 
-UpdateNowPlaying(SongTrackingDirectory, SongName) {
+UpdateNowPlaying(SongTrackingDirectory, NewSongName) {
     NowPlaying := SongTrackingDirectory . "\NowPlaying.txt"
     Played := SongTrackingDirectory . "\Played.txt"
 
@@ -99,11 +99,11 @@ UpdateNowPlaying(SongTrackingDirectory, SongName) {
     {
         FileRead, LastPlayedSongs, %Played%
 	
-        if !IsSameAsLastSong(LastPlayedSongs, SongName) {
+        if !IsSameAsLastSong(LastPlayedSongs, NewSongName) {
 
             ; Append the song to the top of the file (delete the file, write the new song followed by the old one)
             FileDelete, %Played%
-            FileAppend, %SongName%`n, %Played%
+            FileAppend, %NewSongName%`n, %Played%
             FileAppend, %LastPlayedSongs%, %Played%
 	    }	
     }
@@ -111,12 +111,12 @@ UpdateNowPlaying(SongTrackingDirectory, SongName) {
     {
         ; No song list, create a file with the song name in it.
         FileDelete, %Played%
-        FileAppend, %SongName%, %Played%
+        FileAppend, %NewSongName%, %Played%
     }
 
     ; Update the currently playing file with the song name
     FileDelete, %NowPlaying%
-    FileAppend, %SongName%, %NowPlaying%
+    FileAppend, %NewSongName%, %NowPlaying%
 
     return
 }
@@ -192,6 +192,7 @@ StartVideoInVlcRemote(HostAndPort, UserName, Password, RemoteDirectory, LocalDir
 }
 
 StartVideoInVlc(HostAndPort, UserName, Password, RemoteDirectory, LocalDirectory, CommonVideosDirectory, SongName) {
+    global VlcLocal
     if VlcLocal {
     	StartVideoInVlcLocal(LocalDirectory, CommonVideosDirectory, SongName)
     } else {
@@ -200,8 +201,9 @@ StartVideoInVlc(HostAndPort, UserName, Password, RemoteDirectory, LocalDirectory
 }
 
 StopVideoInVlc(HostAndPort, UserName, Password) {
+    global VlcLocal
     if VlcLocal {
-    	return
+    
     }
     
     ; Stop playing whatever may be playing
@@ -221,6 +223,7 @@ StopVideoInVlc(HostAndPort, UserName, Password) {
 }
 
 ClearPlaylistInVlc(HostAndPort, UserName, Password) {
+    global VlcLocal
     if VlcLocal {
     	return
     }
