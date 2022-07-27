@@ -206,7 +206,7 @@ StartVideoInVlc(HostAndPort, UserName, Password, RemoteDirectory, LocalDirectory
 StopVideoInVlc(HostAndPort, UserName, Password) {
     global VlcLocal
     if VlcLocal {
-    
+        return
     }
     
     ; Stop playing whatever may be playing
