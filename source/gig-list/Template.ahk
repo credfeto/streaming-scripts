@@ -181,11 +181,11 @@ StartVideoInVlcRemote(HostAndPort, UserName, Password, RemoteDirectory, LocalDir
 
 StartVideoInVlc(HostAndPort, UserName, Password, RemoteDirectory, LocalDirectory, CommonVideosDirectory, SongName) {
     If VlcLocal = true {
-    	StartVideoInVlcLocal(LocalDirectory, CommonVideosDirectory, SongName) {
+    	StartVideoInVlcLocal(LocalDirectory, CommonVideosDirectory, SongName)
     }
     else
     {
-    	StartVideoInVlcRemote(HostAndPort, UserName, Password, RemoteDirectory, LocalDirectory, CommonVideosDirectory, SongName) {
+    	StartVideoInVlcRemote(HostAndPort, UserName, Password, RemoteDirectory, LocalDirectory, CommonVideosDirectory, SongName)
     }
 }
 
