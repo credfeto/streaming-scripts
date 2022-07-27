@@ -40,6 +40,9 @@ VlcPassword := "vlcremote"
 ; Whether to start playlist using local exe - this disables stopping VLC and clearing any existing playlist when set to true
 VlcLocal := false
 
+; VLC Executable to run when VlcLocal is set to true
+VlcLocalExe := "C:\Program Files\VideoLAN\VLC\vlc.exe"
+
 
 ; **********************************************************************************************************************
 ; * SCRIPTNAME TO SONGNAME FUNCTIONS
@@ -141,7 +144,7 @@ StartVideoInVlcLocal(LocalDirectory, CommonVideosDirectory, SongName) {
         return
     }
 
-    Run, "C:\Program Files\VideoLAN\VLC\vlc.exe", LocalFileName
+    Run, VlcLocalExe, LocalFileName
 }
    
 StartVideoInVlcRemote(HostAndPort, UserName, Password, RemoteDirectory, LocalDirectory, CommonVideosDirectory, SongName) {
