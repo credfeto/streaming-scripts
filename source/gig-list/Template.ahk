@@ -9,10 +9,12 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 
 ; Where is the folder that contain the files for now playing and played (Accessing ObsDirectoryStudio on the OBS Machine)
 ; if the same machine they should be the same
+
 ObsDirectory := "C:\Currently Playing"
 
 ; Where is the folder that contains files for now playing and played on the studio machine (or video laptop)
 ; if remote should use the drive letter mapping e.g. O:\Currently Playing OR a network path to the share \\STUDIO-PC\C\Currently Playing
+
 ObsDirectoryStudio := "C:\Currently Playing"
 
 ; Where the videos file exists under BOTH ObsDirectory and ObsDirectoryStudio
@@ -20,6 +22,7 @@ ObsDirectoryStudio := "C:\Currently Playing"
 ;    same folder C:\Playing\Videos and N:\Playing\Videos
 ; This folder should contain a m3u file for any track that has video 
 ; e.g. "Comfortably Numb.ahk" should have "Comfortably Numb.m3u" in the folder
+
 VideosDirectoryName := "Videos"
 
 ; VLC Setup
@@ -30,17 +33,23 @@ VideosDirectoryName := "Videos"
 
 ; Where is the VLC instance located on the network:
 ; if to the same machine use localhost to different machine, use name or (for speed IP Address):
+
 VlcHostAndPort := "localhost:8080"
 
 ; VLC Username: Normally blank
+
 VlcUsername := ""
+
 ; VLC Password - should be the same as what is set in 'Lua HTTP' Password
+
 VlcPassword := "vlcremote"
 
 ; Whether to start playlist using local exe - this disables stopping VLC and clearing any existing playlist when set to true
+
 VlcLocal := false
 
 ; VLC Executable to run when VlcLocal is set to true
+
 VlcLocalExe := "C:\Program Files\VideoLAN\VLC\vlc.exe"
 
 
