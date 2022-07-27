@@ -37,7 +37,7 @@ VlcUsername := ""
 ; VLC Password - should be the same as what is set in 'Lua HTTP' Password
 VlcPassword := "vlcremote"
 
-; Whether to start playlist using local exe
+; Whether to start playlist using local exe - this disables stopping VLC and clearing any existing playlist when set to true
 VlcLocal := false
 
 
@@ -180,17 +180,15 @@ StartVideoInVlcRemote(HostAndPort, UserName, Password, RemoteDirectory, LocalDir
 }
 
 StartVideoInVlc(HostAndPort, UserName, Password, RemoteDirectory, LocalDirectory, CommonVideosDirectory, SongName) {
-    If VlcLocal = true {
+    If VlcLocal {
     	StartVideoInVlcLocal(LocalDirectory, CommonVideosDirectory, SongName)
-    }
-    else
-    {
-    	StartVideoInVlcRemote(HostAndPort, UserName, Password, RemoteDirectory, LocalDirectory, CommonVideosDirectory, SongName)
+    } else {
+        StartVideoInVlcRemote(HostAndPort, UserName, Password, RemoteDirectory, LocalDirectory, CommonVideosDirectory, SongName) 
     }
 }
 
 StopVideoInVlc(HostAndPort, UserName, Password) {
-    If VlcLocal = true {
+    If VlcLocal {
     	return
     }
     
@@ -211,7 +209,7 @@ StopVideoInVlc(HostAndPort, UserName, Password) {
 }
 
 ClearPlaylistInVlc(HostAndPort, UserName, Password) {
-    If VlcLocal = true {
+    If VlcLocal {
     	return
     }
     
