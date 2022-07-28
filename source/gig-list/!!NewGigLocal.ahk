@@ -142,7 +142,7 @@ LC_UriEncode(Uri, RE="[0-9A-Za-z]")
 	Return, Res
 }
 
-VlcSendRemote(command, UserName, Password) 
+SendCommandToVlc(command, UserName, Password) 
 {
     ; Generate BASIC AUth token
     auth := b64Encode(UserName . ":" . Password)
@@ -188,7 +188,7 @@ StartVideoInVlc(HostAndPort, UserName, Password, VideosDirectory, SongName)
     ; Build the play playlist command
     command := "http://" . HostAndPort . "/requests/status.xml?command=in_play&input=" . FileToPlay
 
-    VlcSendRemote(command, UserName, Password)
+    SendCommandToVlc(command, UserName, Password)
 } 
 
 StopVideoInVlc(HostAndPort, UserName, Password) 
@@ -196,7 +196,7 @@ StopVideoInVlc(HostAndPort, UserName, Password)
     ; Build the stop play playlist command
     command := "http://" . HostAndPort . "/requests/status.xml?command=pl_stop"
 
-    VlcSendRemote(command, UserName, Password)
+    SendCommandToVlc(command, UserName, Password)
 }
 
 ClearPlaylistInVlc(HostAndPort, UserName, Password) 
@@ -205,7 +205,7 @@ ClearPlaylistInVlc(HostAndPort, UserName, Password)
     ; Build the clear playlist command
     command := "http://" . HostAndPort . "/requests/status.xml?command=pl_empty"
 
-    VlcSendRemote(command, UserName, Password)
+    SendCommandToVlc(command, UserName, Password)
 }
 
 ; **********************************************************************************************************************
