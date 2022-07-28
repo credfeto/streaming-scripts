@@ -44,23 +44,13 @@ VlcUsername := ""
 
 VlcPassword := "vlcremote"
 
-; Local Videos - Whether to start playlist using local exe - this disables stopping playing in VLC and clearing any existing playlist when set to true
-
-VlcLocal := false
- 
-; VLC Executable to run when VlcLocal is set to true
-
-VlcLocalExe := "C:\Program Files\VideoLAN\VLC\vlc.exe"
-
-; note when running VLC locally and not using networking, VLC needs to be in single instance mode
-; In Preferences Tick: 
-;   "Allow Only one instance"
 
 ; **********************************************************************************************************************
 ; * SCRIPTNAME TO SONGNAME FUNCTIONS
 ; **********************************************************************************************************************
 
-GetSongName() {
+GetSongName() 
+{
     ; Work out what is being played from the filename of the script
     ; e.g. Comfortably Numb.Ahk
     SongNameLength := StrLen(A_ScriptName) - 4
@@ -72,16 +62,21 @@ GetSongName() {
 ; **********************************************************************************************************************
 ; * SONG LIST UPDATE FUNCTIONS
 ; **********************************************************************************************************************
-IsSameAsLastSong(LastSong, NewSong) {
+
+IsSameAsLastSong(LastSong, NewSong) 
+{
     ; Split the file into an array of lines we go through
     lastSongsList := StrSplit(LastSong, "`n")
 
     ; Find the first non-blank entry in the list and check its name against the new song name
     Match := false
-    For index, entry in lastSongsList {
+    For index, entry in lastSongsList 
+    {
         EntrySongName := Trim(entry, "`r")
-        if(StrLen(EntrySongName) != 0) {
-            if (EntrySongName == NewSong) {
+        if(StrLen(EntrySongName) != 0) 
+        {
+            if (EntrySongName == NewSong) 
+            {
                 ; Last song was the same as the new song - don't do any more
                 Match := true
 	        }
@@ -93,7 +88,8 @@ IsSameAsLastSong(LastSong, NewSong) {
     return %Match%
 }
 
-UpdateNowPlaying(SongTrackingDirectory, NewSongName) {
+UpdateNowPlaying(SongTrackingDirectory, NewSongName) 
+{
     NowPlaying := SongTrackingDirectory . "\NowPlaying.txt"
     Played := SongTrackingDirectory . "\Played.txt"
 
@@ -102,8 +98,8 @@ UpdateNowPlaying(SongTrackingDirectory, NewSongName) {
     {
         FileRead, LastPlayedSongs, %Played%
 	
-        if !IsSameAsLastSong(LastPlayedSongs, NewSongName) {
-
+        if !IsSameAsLastSong(LastPlayedSongs, NewSongName) 
+        {
             ; Append the song to the top of the file (delete the file, write the new song followed by the old one)
             FileDelete, %Played%
             FileAppend, %NewSongName%`n, %Played%
@@ -128,57 +124,75 @@ UpdateNowPlaying(SongTrackingDirectory, NewSongName) {
 ; * VLC FUNCTIONS BEGIN
 ; **********************************************************************************************************************
 
-b64Encode(string) {
+b64Encode(string) 
+{
     ; BASIC Authentication requires BASE 64 encoding
     VarSetCapacity(bin, StrPut(string, "UTF-8")) && len := StrPut(string, &bin, "UTF-8") - 1
     if !(DllCall("crypt32\CryptBinaryToString", "ptr", &bin, "uint", len, "uint", 0x1, "ptr", 0, "uint*", size))
+    {
         throw Exception("CryptBinaryToString failed", -1)
+    }
+
     VarSetCapacity(buf, size << 1, 0)
     if !(DllCall("crypt32\CryptBinaryToString", "ptr", &bin, "uint", len, "uint", 0x1, "ptr", &buf, "uint*", size))
+    {
         throw Exception("CryptBinaryToString failed", -1)
+    }
+
     return StrGet(&buf)
 }
 
-LC_UriEncode(Uri, RE="[0-9A-Za-z]") {
+LC_UriEncode(Uri, RE="[0-9A-Za-z]") 
+{
     ; Make sure parameters are encoded
-	VarSetCapacity(Var, StrPut(Uri, "UTF-8"), 0), StrPut(Uri, &Var, "UTF-8")
-	While Code := NumGet(Var, A_Index - 1, "UChar")
-		Res .= (Chr:=Chr(Code)) ~= RE ? Chr : Format("%{:02X}", Code)
-	Return, Res
-}
-
-StartVideoInVlcLocal(LocalDirectory, CommonVideosDirectory, SongName) {
-   LocalFileName := LocalDirectory . "\" . CommonVideosDirectory . "\" . SongName . ".m3u"
-
-    ; Check to see if there is a playlist called <SongName>.m3u in the LocalDirectory
-    if Not FileExist(LocalFileName) {
-        ; File doesn't exist
-        return
+    VarSetCapacity(Var, StrPut(Uri, "UTF-8"), 0), StrPut(Uri, &Var, "UTF-8")
+    While Code := NumGet(Var, A_Index - 1, "UChar")
+    {
+        Res .= (Chr:=Chr(Code)) ~= RE ? Chr : Format("%{:02X}", Code)
     }
 
-    Run, %VlcLocalExe%, LocalFileName
+    Return, Res
 }
-   
-StartVideoInVlcRemote(HostAndPort, UserName, Password, RemoteDirectory, LocalDirectory, CommonVideosDirectory, SongName) {
-    
+
+SendCommandToVlc(command, UserName, Password) 
+{
+    ; Generate BASIC AUth token
+    auth := b64Encode(UserName . ":" . Password)
+
+    try
+    {
+        ; Send the request to VLC's web server
+        oWhr := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+        oWhr.Open("GET", command, false)
+        oWhr.SetRequestHeader("Content-Type", "application/json")
+        oWhr.SetRequestHeader("Authorization", "Basic " . auth)
+        oWhr.Send()
+
+        ; could use curl to do this?
+    }
+    catch e
+    {
+	    MsgBox, 0, "Could not connect to VLC", % e.message . "Connecting to " . command
+    }
+}
+
+StartVideoInVlc(HostAndPort, UserName, Password, RemoteDirectory, LocalDirectory, CommonVideosDirectory, SongName) 
+{    
     ; Define local and remote filenames - they should both resolve to the same file
     RemoteFileName := RemoteDirectory . "\" . CommonVideosDirectory . "\" . SongName . ".m3u"
     LocalFileName := LocalDirectory . "\" . CommonVideosDirectory . "\" . SongName . ".m3u"
 
     ; Check to see if there is a playlist called <SongName>.m3u in the RemoteDirectory
-    if Not FileExist(RemoteFileName) {
-        ; File doesn't exist
+    if Not FileExist(RemoteFileName) 
+    {
         return
     }
 
     ; Check to see if there is a playlist called <SongName>.m3u in the LocalDirectory
-    if Not FileExist(LocalFileName) {
-        ; File doesn't exist
+    if Not FileExist(LocalFileName) 
+    {
         return
     }
-
-    ; Generate BASIC AUth token
-    auth := b64Encode(UserName . ":" . Password)
 
     ; URI Encode the filename so that its properly parsable by the http request
     FileToPlay := LC_UriEncode(LocalFileName)
@@ -186,65 +200,27 @@ StartVideoInVlcRemote(HostAndPort, UserName, Password, RemoteDirectory, LocalDir
     ; Build the play playlist command
     command := "http://" . HostAndPort . "/requests/status.xml?command=in_play&input=" . FileToPlay
 
-    ; Send the request to VLC's web server
-    oWhr := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-    oWhr.Open("GET", command, false)
-    oWhr.SetRequestHeader("Content-Type", "application/json")
-    oWhr.SetRequestHeader("Authorization", "Basic " . auth)
-    oWhr.Send()
+    SendCommandToVlc(command, UserName, Password)
 }
 
-StartVideoInVlc(HostAndPort, UserName, Password, RemoteDirectory, LocalDirectory, CommonVideosDirectory, SongName) {
-    global VlcLocal
-    if VlcLocal {
-    	StartVideoInVlcLocal(LocalDirectory, CommonVideosDirectory, SongName)
-    } else {
-        StartVideoInVlcRemote(HostAndPort, UserName, Password, RemoteDirectory, LocalDirectory, CommonVideosDirectory, SongName) 
-    }
-}
-
-StopVideoInVlc(HostAndPort, UserName, Password) {
-    global VlcLocal
-    if VlcLocal {
-        return
-    }
-    
+StopVideoInVlc(HostAndPort, UserName, Password) 
+{
     ; Stop playing whatever may be playing
-
-   ; Generate BASIC AUth token
-    auth := b64Encode(UserName . ":" . Password)
 
     ; Build the stop play playlist command
     command := "http://" . HostAndPort . "/requests/status.xml?command=pl_stop"
 
-    ; Send the request to VLC's web server
-    oWhr := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-    oWhr.Open("GET", command, false)
-    oWhr.SetRequestHeader("Content-Type", "application/json")
-    oWhr.SetRequestHeader("Authorization", "Basic " . auth)
-    oWhr.Send()
+    SendCommandToVlc(command, UserName, Password)
 }
 
-ClearPlaylistInVlc(HostAndPort, UserName, Password) {
-    global VlcLocal
-    if VlcLocal {
-    	return
-    }
-    
+ClearPlaylistInVlc(HostAndPort, UserName, Password) 
+{    
     ; Clear the playlist
 
-   ; Generate BASIC AUth token
-    auth := b64Encode(UserName . ":" . Password)
-
     ; Build the clear playlist command
-    playPLaylistCommand := "http://" . HostAndPort . "/requests/status.xml?command=pl_empty"
+    command := "http://" . HostAndPort . "/requests/status.xml?command=pl_empty"
 
-    ; Send the request to VLC's web server
-    oWhr := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-    oWhr.Open("GET", playPLaylistCommand, false)
-    oWhr.SetRequestHeader("Content-Type", "application/json")
-    oWhr.SetRequestHeader("Authorization", "Basic " . auth)
-    oWhr.Send()
+    SendCommandToVlc(command, UserName, Password)
 }
 
 ; **********************************************************************************************************************
@@ -257,11 +233,12 @@ ClearPlaylistInVlc(HostAndPort, UserName, Password) {
 ; **********************************************************************************************************************
 
 ; note this won't do anything unless it is explicitly called in the 'SEQUENCE OF ACTIONS TO RUN' section below
-StartTrackInShowBuddy() {
-	; Activate ShowBuddy, hit space to start playing
+StartTrackInShowBuddy() 
+{
+    ; Activate ShowBuddy, hit space to start playing
     WinActivate, Show Buddy
-	Send  {Space}
-	return
+    Send  {Space}
+    return
 }
 
 ; **********************************************************************************************************************
@@ -269,12 +246,13 @@ StartTrackInShowBuddy() {
 ; **********************************************************************************************************************
 
 ; note this won't do anything unless it is explicitly called in the 'SEQUENCE OF ACTIONS TO RUN' section below
-StartTrackInCubase() {
+StartTrackInCubase() 
+{
     ; Activate Cubase, hit space to start playing
-	Sleep 140
-	WinActivate, Cubase
-	Send  {Space}
-	return
+    Sleep 140
+    WinActivate, Cubase
+    Send  {Space}
+    return
 }
 
 ; **********************************************************************************************************************
@@ -282,12 +260,13 @@ StartTrackInCubase() {
 ; **********************************************************************************************************************
 
 ; note this won't do anything unless it is explicitly called in the 'SEQUENCE OF ACTIONS TO RUN' section below
-StartTrackInReaper() {
+StartTrackInReaper() 
+{
     ; Activate Reaper, hit space to start playing
-	Sleep 140
-	WinActivate, Reaper
-	Send  {Space}
-	return
+    Sleep 140
+    WinActivate, Reaper
+    Send  {Space}
+    return
 }
 
 
@@ -311,6 +290,7 @@ UpdateNowPlaying(ObsDirectory, SongName)
 StartVideoInVlc(VlcHostAndPort, VlcUsername, VlcPassword, ObsDirectory, ObsDirectoryStudio, VideosDirectoryName, SongName)
 
 ; StartTrackInCubase()
+; StartTrackInReaper();
 ; StartTrackInShowBuddy()
 
 
