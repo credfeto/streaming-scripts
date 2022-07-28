@@ -120,7 +120,7 @@ UpdateNowPlaying(SongTrackingDirectory, NewSongName)
 b64Encode(string) 
 {
     size := 0
-    
+
     ; BASIC Authentication requires BASE 64 encoding
     VarSetCapacity(bin, StrPut(string, "UTF-8")) && len := StrPut(string, &bin, "UTF-8") - 1
     if !(DllCall("crypt32\CryptBinaryToString", "ptr", &bin, "uint", len, "uint", 0x1, "ptr", 0, "uint*", size))
@@ -132,7 +132,9 @@ b64Encode(string)
 }
 
 LC_UriEncode(Uri, RE="[0-9A-Za-z]") 
-{
+{ 
+    Res := ""
+    
     ; Make sure parameters are encoded
 	VarSetCapacity(Var, StrPut(Uri, "UTF-8"), 0), StrPut(Uri, &Var, "UTF-8")
 	While Code := NumGet(Var, A_Index - 1, "UChar")
