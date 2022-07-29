@@ -240,7 +240,7 @@ ClearPlaylistInVlc(HostAndPort, UserName, Password)
 StartTrackInReaper() {
     ; Activate Reaper, hit space to start playing
 	Sleep 140
-	SetTitleMatchMode, 2
+    SetTitleMatchMode, 2
 	WinActivate, Reaper
 	Send  {Space}
 	return
