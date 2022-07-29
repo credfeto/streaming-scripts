@@ -14,7 +14,7 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 #Include lib\!!Cubase.ahk
 #Include lib\!!OBS.ahk
 #Include lib\!!Reaper.ahk
-#Include lib\!!Reaper.ahk
+#Include lib\!!ShowBuddy.ahk
 
 ; **********************************************************************************************************************
 ; * CONFIGURATION
