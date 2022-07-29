@@ -8,10 +8,10 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 ; * CONFIGURATION
 ; **********************************************************************************************************************
 
-; Where is the folder that contain the files for now playing and played (Accessing ObsDirectoryStudio on the OBS Machine)
+; Where is the folder that contain the files for now playing and played
 ; if the same machine they should be the same
 
-ObsDirectory := "C:\Currently Playing"
+PlaylistDirectory := "C:\Currently Playing"
 
 ; Where the videos files exists
 ; This folder should contain a m3u file for any track that has video 
@@ -57,6 +57,7 @@ GetSongName()
 ; **********************************************************************************************************************
 ; * SONG LIST UPDATE FUNCTIONS
 ; **********************************************************************************************************************
+
 IsSameAsLastSong(LastSong, NewSong) 
 {
     ; Split the file into an array of lines we go through
@@ -117,7 +118,7 @@ UpdateNowPlaying(SongTrackingDirectory, NewSongName)
 ; * VLC FUNCTIONS BEGIN
 ; **********************************************************************************************************************
 
-b64Encode(string) 
+Base64Encode(string) 
 {
     size := 0
 
@@ -131,7 +132,7 @@ b64Encode(string)
     return StrGet(&buf)
 }
 
-LC_UriEncode(Uri, RE="[0-9A-Za-z]") 
+UriEncode(Uri, RE="[0-9A-Za-z]") 
 { 
     Res := ""
     
@@ -145,9 +146,9 @@ LC_UriEncode(Uri, RE="[0-9A-Za-z]")
 SendCommandToVlc(command, UserName, Password) 
 {
     ; Generate BASIC AUth token
-    auth := b64Encode(UserName . ":" . Password)
+    auth := Base64Encode(UserName . ":" . Password)
 
-    ; Send the request to VLC's web server
+    ; Send the request to VLC's control server
     try
     {
         oWhr := ComObjCreate("WinHttp.WinHttpRequest.5.1")
@@ -182,8 +183,8 @@ StartVideoInVlc(HostAndPort, UserName, Password, VideosDirectory, SongName)
         return
     }
 
-    ; URI Encode the filename so that its properly parsable by the http request
-    FileToPlay := LC_UriEncode(LocalFileName)
+    ; URI Encode the filename so that its properly parsable by the request
+    FileToPlay := UriEncode(LocalFileName)
 
     ; Build the play playlist command
     command := "http://" . HostAndPort . "/requests/status.xml?command=in_play&input=" . FileToPlay
@@ -244,7 +245,7 @@ StartTrackInReaper() {
 StopVideoInVlc(VlcHostAndPort, VlcUsername, VlcPassword)
 ClearPlaylistInVlc(VlcHostAndPort, VlcUsername, VlcPassword)
 SongName := GetSongName()
-UpdateNowPlaying(ObsDirectory, SongName)
+UpdateNowPlaying(PlaylistDirectory, SongName)
 StartVideoInVlc(VlcHostAndPort, VlcUsername, VlcPassword, VideosDirectoryName, SongName)
 
 StartTrackInReaper()
