@@ -24,7 +24,24 @@ VideosDirectoryName := "C:\Currently Playing\Videos"
 ; Switch Show settings at bottom left to "All"
 ; Find "Main Interfaces" in tree,  Select "Web"
 ; Under "Main Interfaces" in tree go to "Lua" and in the the 'Lua HTTP' section set a password e.g. vlcremote
-; note: VLC should be running before this script is executed
+
+; Notes:
+; * VLC should be running before this script is executed
+;
+; * This script will not work, if it cannot talk to VLC.  To test this out on the machine that VLC is running on go to:
+;
+;             http://127.0.0.1:8080
+;
+;       You should be prompted for a username and password, leave the username password and set the password to what is set in VLC and
+;       it will show a 'mobile interface'
+; 
+;       If VLC is on another machine then you need additionally from where this script is running go to:
+;
+;             http://RemoteMachineNameOrIp:8080
+;
+;       e.g: http://studio-pc:8080
+
+
 
 ; Where is the VLC instance located on the network:
 ; note that the port by default is 8080
