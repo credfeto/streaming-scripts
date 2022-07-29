@@ -7,21 +7,13 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 ; **********************************************************************************************************************
 ; * INCLUDE Scripts from the library
 ; **********************************************************************************************************************
-; Adds functions to help with the settings
 #Include lib\!!String.ahk
-; Adds functions to get the song name from the running script name
 #Include lib\!!SongName.ahk
-; Adds functions to update the Currently playing/Last Played files
 #Include lib\!!RecentlyPlayed.ahk
-; Adds functions for controlling VLC
 #Include lib\!!VLC.ahk
-; Adds Functions for controlling Cubase
 #Include lib\!!Cubase.ahk
-; Adds functions for controlling OBS
 #Include lib\!!OBS.ahk
-; Adds functions for controlling Reaper
 #Include lib\!!Reaper.ahk
-; Adds functions for controlling ShowBuddy
 #Include lib\!!Reaper.ahk
 
 ; **********************************************************************************************************************
