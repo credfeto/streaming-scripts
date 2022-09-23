@@ -1,7 +1,1 @@
-$(eval
-const streamer = '$(touser)'.toLowerCase();
-const api = $(urlfetch json https://raw.githubusercontent.com/credfeto/streaming-scripts/main/shoutouts.js);
-!api.error && api[streamer] 
-    ? api[streamer] 
-    : 'Check out $(touser) at $(twitch $(touser) "{{url}} they were last seen playing {{game}}")'
-)
+$(eval api = $(urlfetch json https://raw.githubusercontent.com/credfeto/streaming-scripts/main/shoutouts.js);api['$(touser)'.toLowerCase()] ?? 'Check out @$(touser) at https://twitch.tv/$(touser)' )
